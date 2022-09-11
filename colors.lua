@@ -1,12 +1,12 @@
-local colors = {}
-colors.__index = colors
-colors._VERSION = "1.0.0"
-colors.range = 1
 
--- local ffi = require("ffi")
--- https://discord.com/channels/329400828920070144/329404715521802241/960992021965865070
--- this is help for ffi.
--- https://luajit.org/ext_ffi_tutorial.html
+local iMap = { r = 1, g = 2, b = 3, a = 4 }
+local colors = {}
+colors.__index = function(t, key)
+	return iMap[key] and t[iMap[key]] or colors[key]
+end
+
+colors._VERSION = "1.0.1"
+colors.range = 1
 
 local function clamp(x, min, max)
 	if x > max then return max end
