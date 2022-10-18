@@ -1,12 +1,12 @@
-local colors = {}
-colors.__index = colors
-colors._VERSION = "1.0.0"
-colors.range = 1
 
--- local ffi = require("ffi")
--- https://discord.com/channels/329400828920070144/329404715521802241/960992021965865070
--- this is help for ffi.
--- https://luajit.org/ext_ffi_tutorial.html
+local iMap = { r = 1, g = 2, b = 3, a = 4 }
+local colors = {}
+colors.__index = function(t, key)
+	return iMap[key] and t[iMap[key]] or colors[key]
+end
+
+colors._VERSION = "1.0.2"
+colors.range = 1
 
 local function clamp(x, min, max)
 	if x > max then return max end
@@ -112,6 +112,10 @@ function colors.average(a, b)
 	return colors.new((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2, (a[4] + b[4]) / 2)
 end
 
+function colors.random(alpha)
+	return colors.new(math.random(), math.random(), math.random(), alpha or 1)
+end
+
 function colors.isValid(a)
 	if type(a) ~= "table" then return false end
 	for i = 1, 4 do
@@ -148,6 +152,7 @@ colors.cyan = colors.new(0, 1, 1)
 colors.magenta = colors.new(1, 0, 1)
 colors.lightGray = colors.new(0.827451, 0.827451, 0.827451)
 colors.darkGray = colors.new(0.25, 0.25, 0.25)
+colors.gold = colors.new(1, 0.84, 0)
 colors.lightRed = colors.new(1, 0.5, 0.5)
 colors.pink = colors.lightRed
 colors.lightGreen = colors.new(0.5, 1, 0.5)
