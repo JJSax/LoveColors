@@ -1,5 +1,7 @@
 
 local iMap = { r = 1, g = 2, b = 3, a = 4 }
+
+local iMap = { r = 1, g = 2, b = 3, a = 4 }
 local colors = {}
 colors.__index = function(t, key)
 	return iMap[key] and t[iMap[key]] or colors[key]
