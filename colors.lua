@@ -5,7 +5,7 @@ colors.__index = function(t, key)
 	return iMap[key] and t[iMap[key]] or colors[key]
 end
 
-colors._VERSION = "1.0.2"
+colors._VERSION = "1.0.3"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -42,6 +42,15 @@ function colors.new(r, g, b, a)
 	return self
 end
 
+function colors:desaturate(intensity)
+	local i = (self.r + self.g + self.b) / 3
+	local dr, dg, db = i - self.r, i - self.g, i - self.b
+	return colors.new(
+		self.r + dr * intensity,
+		self.g + dg * intensity,
+		self.b + db * intensity
+	)
+end
 
 function colors:lighten(amount)
 	assert(type(amount) == "number", "amount must be a number")
@@ -167,5 +176,14 @@ colors.darkYellow = colors.new(0.5, 0.25, 0)
 colors.brown = colors.new(0.5, 0.25, 0)
 colors.darkSlateGray = colors.new(0.184314, 0.309804, 0.309804)
 colors.slateGray = colors.new(0.439216, 0.513725, 0.513725)
+
+if love and love.graphics then
+
+	-- Only if using love and the graphics is enabled
+	function colors:set()
+		love.graphics.setColor(self)
+	end
+
+end
 
 return colors
