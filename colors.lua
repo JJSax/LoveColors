@@ -156,6 +156,7 @@ colors.purple = colors.new(0.5, 0, 0.5)
 -- extras
 
 --
+colors.tan = colors.new(0.82, 0.7, 0.55)
 colors.orange = colors.new(1, 0.5, 0)
 colors.cyan = colors.new(0, 1, 1)
 colors.magenta = colors.new(1, 0, 1)
