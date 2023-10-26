@@ -1,5 +1,3 @@
----@meta
-
 local iMap = { r = 1, g = 2, b = 3, a = 4 }
 
 ---@class Colors
