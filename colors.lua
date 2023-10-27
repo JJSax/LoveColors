@@ -29,10 +29,10 @@ local function testNumber(...)
 	end
 end
 
----@param r number|table<number,number,number,number?> Red value or {r,g,b[, a]}
----@param g number? Green value
----@param b number? Blue value
----@param a number? Alpha value
+---@param r number|table{ number, number, number, number? } Red value or {r,g,b[,a]}
+---@param g? number Green value
+---@param b? number Blue value
+---@param a? number Alpha value
 ---@return Colors
 function colors.new(r, g, b, a)
 	local self = setmetatable({}, colors)
@@ -61,7 +61,8 @@ function colors:desaturate(intensity)
 	return colors.new(
 		self.r + dr * intensity,
 		self.g + dg * intensity,
-		self.b + db * intensity
+		self.b + db * intensity,
+		self.a
 	)
 end
 
