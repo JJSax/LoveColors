@@ -14,13 +14,17 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.0.6"
+colors._VERSION = "1.0.7"
 colors.range = 1
 
 local function clamp(x, min, max)
 	if x > max then return max end
 	if x < min then return min end
 	return x
+end
+
+local function lerp(a, b, f)
+	return a * (1 - f) + (b * f)
 end
 
 local function testNumber(...)
@@ -88,6 +92,19 @@ function colors:darken(amount)
 		clamp(self[2] - amount * self.range, 0, self.range),
 		clamp(self[3] - amount * self.range, 0, self.range),
 		self[4]
+	)
+end
+
+--- Interpolates between two colors
+---@param b Colors The color to interpolate to
+---@param f number 0-1f To determine how close to the start or end point
+---@return Colors The result of the interpolation
+function colors:lerp(b, f)
+	return colors.new(
+		lerp(self[1], b[1], f),
+		lerp(self[2], b[2], f),
+		lerp(self[3], b[3], f),
+		self.a
 	)
 end
 
