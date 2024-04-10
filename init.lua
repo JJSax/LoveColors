@@ -11,7 +11,7 @@ colors.__index = function(t, key)
 	return iMap[key] and t[iMap[key]] or colors[key]
 end
 
-colors._VERSION = "1.0.4"
+colors._VERSION = "1.0.5"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -164,6 +164,13 @@ function colors.random(alpha)
     return colors.new(math.random(), math.random(), math.random(), alpha or 1)
 end
 
+--- Clones a color
+---@param a Colors
+---@return Colors
+function colors.clone(a)
+	return colors.new(a:unpack())
+end
+
 ---@param a Colors
 ---@return boolean
 function colors.isValid(a)
@@ -222,9 +229,9 @@ colors.slateGray = colors.new(0.439216, 0.513725, 0.513725)
 if love and love.graphics then
 
 	-- Only if using love and the graphics is enabled
-	function colors:set()
-		love.graphics.setColor(self)
-	end
+    function colors:set()
+        love.graphics.setColor(self)
+    end
 
 end
 
