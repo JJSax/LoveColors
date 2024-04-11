@@ -14,7 +14,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.0.7"
+colors._VERSION = "1.1.0"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -202,6 +202,130 @@ function colors.isValid(a)
 	end
 	return a.color == true -- ensure boolean return, not nil
 end
+
+
+--[[
+	HSL and HSV reference
+	https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
+	adapted from http://en.wikipedia.org/wiki/HSL_color_space
+	adapted from http://en.wikipedia.org/wiki/HSV_color_space
+]]
+
+---Converts an RGB color value to HSL. Conversion formula
+---assumes r, g, and b are between 0 and colors.range
+---returns h, s, and l in range between 0 and 1f
+---@param r number The red color value
+---@param g number The green color value
+---@param b number The blue color value
+---@return table #The HSL representation
+function colors.rgbToHsl(r, g, b)
+    r, g, b = r / colors.range, g / colors.range, b / colors.range
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h = (max + min) / 2
+    local s, l = h, h
+
+    if (max == min) then
+        return { 0, 0, l } -- achromatic
+    end
+
+    local d = max - min
+    s = l > 0.5 and d / (2 - max - min) or d / (max + min)
+    if max == r then h = (g - b) / d + (g < b and 6 or 0) end
+    if max == g then h = (b - r) / d + 2 end
+    if max == b then h = (r - g) / d + 4 end
+
+    return { h / 6, s, l }
+end
+
+function colors:hsl()
+	return colors.rgbToHsl(self.r, self.g, self.b)
+end
+
+local function hue2rgb(p, q, t)
+	if t < 0   then t = t + 1 end
+	if t > 1   then t = t - 1 end
+	if t < 1/6 then return p + (q - p) * 6 * t end
+	if t < 1/2 then return q end
+	if t < 2/3 then return p + (q - p) * (2/3 - t) * 6 end
+	return p
+end
+
+
+---Converts an HSL color value to RGB. Conversion formula
+---assumes h, s, and l are between 0 and 1
+---@param h number Hue
+---@param s number Saturation
+---@param l number Lightness
+---@return Colors #The RGB representation
+function colors.hslToRgb(h, s, l)
+	if s == 0 then
+		return colors.new(l * colors.range, l * colors.range, l * colors.range)
+	end
+
+	local q = l < 0.5 and l * (1 + s) or l + s - l * s
+	local p = 2 * l - q
+	local r = hue2rgb(p, q, h + 1/3)
+	local g = hue2rgb(p, q, h)
+	local b = hue2rgb(p, q, h - 1/3)
+	return colors.new(r * colors.range, g * colors.range, b * colors.range)
+end
+
+
+---Converts an RGB color value to HSV. Conversion formula
+---Assumes r, g, and b are between 0 and colors.range
+---@param r number The red color value
+---@param g number The green color value
+---@param b number The blue color value
+---@return table The HSV representation; Values 0-1f
+function colors.rgbToHsv(r, g, b)
+    r, g, b = r / colors.range, g / colors.range, b / colors.range
+    local max, min = math.max(r, g, b), math.min(r, g, b)
+    local h, s, v = max, max, max
+
+    local d = max - min
+    s = max == 0 and 0 or d / max
+
+    if (max == min) then
+        h = 0 -- achromatic
+    else
+        if max == r then h = (g - b) / d + (g < b and 6 or 0) end
+        if max == g then h = (b - r) / d + 2 end
+        if max == b then h = (r - g) / d + 4 end
+        h = h / 6
+    end
+
+    return { h, s, v }
+end
+
+function colors:hsv()
+	return colors.rgbToHsv(self.r, self.g, self.b)
+end
+
+
+--- Converts an HSV color value to RGB. Conversion formula
+--- Assumes h, s, and v are contained in the set [0, 1]
+---@param h number Hue
+---@param s number Saturation
+---@param v number Value
+---@return Colors? #The RGB representation
+function colors.hsvToRgb(h, s, v)
+	local i = math.floor(h * 6)
+	local f = h * 6 - i
+	local p = v * (1 - s) * colors.range
+	local q = v * (1 - f * s) * colors.range
+	local t = v * (1 - (1 - f) * s) * colors.range
+	v = v * colors.range
+
+	i = i % 6
+	if(i == 0) then return colors.new(v, t, p) end
+	if(i == 1) then return colors.new(q, v, p) end
+	if(i == 2) then return colors.new(p, v, t) end
+	if(i == 3) then return colors.new(p, q, v) end
+	if(i == 4) then return colors.new(t, p, v) end
+	if(i == 5) then return colors.new(v, p, q) end
+end
+
+
 
 -- colors in order from wikipedia web colors
 colors.white = colors.new(1, 1, 1)
