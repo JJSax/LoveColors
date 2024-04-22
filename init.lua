@@ -14,7 +14,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.1.0"
+colors._VERSION = "1.1.1"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -363,7 +363,7 @@ colors.lightYellow = colors.new(1, 1, 0.5)
 colors.lightCyan = colors.new(0.5, 1, 1)
 colors.lightMagenta = colors.new(1, 0.5, 1)
 colors.darkRed = colors.new(0.5, 0, 0)
-colors.darkGreen = colors.new(0, 0.5, 0)
+colors.darkGreen = colors.new(0, 0.3, 0)
 colors.darkBlue = colors.new(0, 0, 0.5)
 colors.darkYellow = colors.new(0.5, 0.25, 0)
 colors.brown = colors.new(0.5, 0.25, 0)
