@@ -219,22 +219,22 @@ end
 ---@param b number The blue color value
 ---@return table #The HSL representation
 function colors.rgbToHsl(r, g, b)
-    r, g, b = r / colors.range, g / colors.range, b / colors.range
-    local max, min = math.max(r, g, b), math.min(r, g, b)
-    local h = (max + min) / 2
-    local s, l = h, h
+	r, g, b = r / colors.range, g / colors.range, b / colors.range
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h = (max + min) / 2
+	local s, l = h, h
 
-    if (max == min) then
-        return { 0, 0, l } -- achromatic
-    end
+	if (max == min) then
+		return { 0, 0, l } -- achromatic
+	end
 
-    local d = max - min
-    s = l > 0.5 and d / (2 - max - min) or d / (max + min)
-    if max == r then h = (g - b) / d + (g < b and 6 or 0) end
-    if max == g then h = (b - r) / d + 2 end
-    if max == b then h = (r - g) / d + 4 end
+	local d = max - min
+	s = l > 0.5 and d / (2 - max - min) or d / (max + min)
+	if max == r then h = (g - b) / d + (g < b and 6 or 0) end
+	if max == g then h = (b - r) / d + 2 end
+	if max == b then h = (r - g) / d + 4 end
 
-    return { h / 6, s, l }
+	return { h / 6, s, l }
 end
 
 function colors:hsl()
@@ -278,23 +278,23 @@ end
 ---@param b number The blue color value
 ---@return table The HSV representation; Values 0-1f
 function colors.rgbToHsv(r, g, b)
-    r, g, b = r / colors.range, g / colors.range, b / colors.range
-    local max, min = math.max(r, g, b), math.min(r, g, b)
-    local h, s, v = max, max, max
+	r, g, b = r / colors.range, g / colors.range, b / colors.range
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h, s, v = max, max, max
 
-    local d = max - min
-    s = max == 0 and 0 or d / max
+	local d = max - min
+	s = max == 0 and 0 or d / max
 
-    if (max == min) then
-        h = 0 -- achromatic
-    else
-        if max == r then h = (g - b) / d + (g < b and 6 or 0) end
-        if max == g then h = (b - r) / d + 2 end
-        if max == b then h = (r - g) / d + 4 end
-        h = h / 6
-    end
+	if (max == min) then
+		h = 0 -- achromatic
+	else
+		if max == r then h = (g - b) / d + (g < b and 6 or 0) end
+		if max == g then h = (b - r) / d + 2 end
+		if max == b then h = (r - g) / d + 4 end
+		h = h / 6
+	end
 
-    return { h, s, v }
+	return { h, s, v }
 end
 
 function colors:hsv()
