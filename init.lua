@@ -88,9 +88,9 @@ end
 function colors:darken(amount)
 	assert(type(amount) == "number", "amount must be a number")
 	return colors.new(
-		clamp(self[1] - amount * self.range, 0, self.range),
-		clamp(self[2] - amount * self.range, 0, self.range),
-		clamp(self[3] - amount * self.range, 0, self.range),
+		clamp(self[1] * (1 - amount * self.range), 0, self.range),
+		clamp(self[2] * (1 - amount * self.range), 0, self.range),
+		clamp(self[3] * (1 - amount * self.range), 0, self.range),
 		self[4]
 	)
 end
