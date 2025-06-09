@@ -372,9 +372,23 @@ colors.slateGray = colors.new(0.439216, 0.513725, 0.513725)
 
 if love and love.graphics then
 
+	local lg = love.graphics
+
 	-- Only if using love and the graphics is enabled
 	function colors:set()
-		love.graphics.setColor(self)
+		lg.setColor(self)
+	end
+
+	function colors:setBackgroundColor()
+		lg.setBackgroundColor(self)
+	end
+
+	function colors:getColor()
+		return colors.new(lg.getColor())
+	end
+
+	function colors:getBackgroundColor()
+		return colors.new(lg.getBackgroundColor())
 	end
 
 end
