@@ -171,11 +171,16 @@ function colors.__eq(a, b)
 	return a.color and b.color
 end
 
----@param a Colors
----@param b Colors
+---@param ... Colors
 ---@return Colors
-function colors.average(a, b)
-	return colors.new((a[1] + b[1]) / 2, (a[2] + b[2]) / 2, (a[3] + b[3]) / 2, (a[4] + b[4]) / 2)
+function colors.average(...)
+	local el = {...}
+	local c = colors.new(0, 0, 0, 0)
+	for _, v in ipairs(el) do
+		c = c + v
+	end
+	local t = #el
+	return colors.new(c[1] / t, c[2] / t, c[3] / t, c[4] / t)
 end
 
 ---@param alpha? number alpha to get color.
