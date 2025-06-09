@@ -1,4 +1,5 @@
 local iMap = { r = 1, g = 2, b = 3, a = 4 }
+local unpack = table.unpack or unpack
 
 ---@class Colors
 ---@field r number
@@ -34,6 +35,26 @@ local function testNumber(...)
 			error("Expected number, got " .. type(v), 2)
 		end
 	end
+end
+
+local function linearAverage(list)
+	local t = 0
+	for i,v in ipairs(list) do
+		t = t + v
+	end
+	return t / #list
+end
+
+local function averageHue(hues)
+	local x, y = 0, 0
+	for _, h in ipairs(hues) do
+		local angle = h * 2 * math.pi
+		x = x + math.cos(angle)
+		y = y + math.sin(angle)
+	end
+	local avg_angle = math.atan2(y, x)
+	if avg_angle < 0 then avg_angle = avg_angle + 2 * math.pi end
+	return avg_angle / (2 * math.pi)
 end
 
 ---@param r number|table{ number, number, number, number? } Red value or {r,g,b[,a]}
@@ -183,6 +204,32 @@ function colors.average(...)
 	return colors.new(c[1] / t, c[2] / t, c[3] / t, c[4] / t)
 end
 
+---Takes a list of RGB colors and averages hues to be more accurate to human perception.<br>
+---Slower than just taking the simple colors.average.
+---@param ... Colors
+---@return Colors
+function colors.averageHue(...)
+	local colorsList = { ... }
+	local hList, sList, lList, aList = {}, {}, {}, {}
+
+	for _, c in ipairs(colorsList) do
+		local r, g, b, a = c[1], c[2], c[3], c[4]
+		local h, s, l = unpack(colors.rgbToHsl(r, g, b))
+		table.insert(hList, h)
+		table.insert(sList, s)
+		table.insert(lList, l)
+		table.insert(aList, a)
+	end
+
+	local avgH = averageHue(hList)
+	local avgS = linearAverage(sList)
+	local avgL = linearAverage(lList)
+	local avgA = linearAverage(aList)
+
+	local output = colors.hslToRgb(avgH, avgS, avgL)
+	return output:alpha(avgA)
+end
+
 ---@param alpha? number alpha to get color.
 ---@return Colors
 function colors.random(alpha)
@@ -254,7 +301,6 @@ local function hue2rgb(p, q, t)
 	if t < 2/3 then return p + (q - p) * (2/3 - t) * 6 end
 	return p
 end
-
 
 ---Converts an HSL color value to RGB. Conversion formula
 ---assumes h, s, and l are between 0 and 1
