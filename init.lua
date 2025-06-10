@@ -15,7 +15,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.1.1"
+colors._VERSION = "1.1.2"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -177,7 +177,11 @@ end
 ---@param b Colors
 ---@return Colors
 function colors.__div(a, b)
-	return colors.new(a[1] / b, a[2] / b, a[3] / b, a[4] / b)
+	if type(b) == "number" then
+		return colors.new(a[1] / b, a[2] / b, a[3] / b, a[4] / b)
+	else
+		return colors.new(a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4])
+	end
 end
 
 ---@param a Colors
