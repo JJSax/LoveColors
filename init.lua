@@ -15,7 +15,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.1.2"
+colors._VERSION = "1.1.3"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -82,6 +82,18 @@ function colors.new(r, g, b, a)
 	return self
 end
 
+---@param a Colors
+---@return boolean
+function colors.isValid(a)
+	if type(a) ~= "table" then return false end
+	for i = 1, 4 do
+		if type(a[i]) ~= "number" then
+			return false
+		end
+	end
+	return a.color == true -- ensure boolean return, not nil
+end
+
 ---@param intensity number float 0-1 of how much to desaturate
 function colors:desaturate(intensity)
 	local i = (self.r + self.g + self.b) / 3
@@ -146,56 +158,6 @@ function colors.unpack(color)
 	return color[1], color[2], color[3], color[4]
 end
 
----@param a Colors
----@param b Colors
----@return Colors
-function colors.__add(a, b)
-	return colors.new(a[1] + b[1], a[2] + b[2], a[3] + b[3], a[4] + b[4])
-end
-
----@param a Colors
----@param b Colors
----@return Colors
-function colors.__sub(a, b)
-	return colors.new(a[1] - b[1], a[2] - b[2], a[3] - b[3], a[4] - b[4])
-end
-
----@param a Colors
----@param b Colors
----@return Colors
-function colors.__mul(a, b)
-	if type(a) == "number" then
-		return colors.new(a * b[1], a * b[2], a * b[3], a * b[4])
-	elseif type(b) == "number" then
-		return colors.new(b * a[1], b * a[2], b * a[3], b * a[4])
-	else
-		return colors.new(a[1] * b[1], a[2] * b[2], a[3] * b[3], a[4] * b[4])
-	end
-end
-
----@param a Colors
----@param b Colors
----@return Colors
-function colors.__div(a, b)
-	if type(b) == "number" then
-		return colors.new(a[1] / b, a[2] / b, a[3] / b, a[4] / b)
-	else
-		return colors.new(a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4])
-	end
-end
-
----@param a Colors
----@param b Colors
----@return boolean
-function colors.__eq(a, b)
-	for i = 1, 4 do
-		if a[i] ~= b[i] then
-			return false
-		end
-	end
-	return a.color and b.color
-end
-
 ---@param ... Colors
 ---@return Colors
 function colors.average(...)
@@ -245,18 +207,6 @@ end
 ---@return Colors
 function colors.clone(a)
 	return colors.new(a:unpack())
-end
-
----@param a Colors
----@return boolean
-function colors.isValid(a)
-	if type(a) ~= "table" then return false end
-	for i = 1, 4 do
-		if type(a[i]) ~= "number" then
-			return false
-		end
-	end
-	return a.color == true -- ensure boolean return, not nil
 end
 
 
@@ -325,7 +275,6 @@ function colors.hslToRgb(h, s, l)
 	return colors.new(r * colors.range, g * colors.range, b * colors.range)
 end
 
-
 ---Converts an RGB color value to HSV. Conversion formula
 ---Assumes r, g, and b are between 0 and colors.range
 ---@param r number The red color value
@@ -356,7 +305,6 @@ function colors:hsv()
 	return colors.rgbToHsv(self.r, self.g, self.b)
 end
 
-
 --- Converts an HSV color value to RGB. Conversion formula
 --- Assumes h, s, and v are contained in the set [0, 1]
 ---@param h number Hue
@@ -380,7 +328,55 @@ function colors.hsvToRgb(h, s, v)
 	if(i == 5) then return colors.new(v, p, q) end
 end
 
+---@param a Colors
+---@param b Colors
+---@return Colors
+function colors.__add(a, b)
+	return colors.new(a[1] + b[1], a[2] + b[2], a[3] + b[3], a[4] + b[4])
+end
 
+---@param a Colors
+---@param b Colors
+---@return Colors
+function colors.__sub(a, b)
+	return colors.new(a[1] - b[1], a[2] - b[2], a[3] - b[3], a[4] - b[4])
+end
+
+---@param a Colors
+---@param b Colors
+---@return Colors
+function colors.__mul(a, b)
+	if type(a) == "number" then
+		return colors.new(a * b[1], a * b[2], a * b[3], a * b[4])
+	elseif type(b) == "number" then
+		return colors.new(b * a[1], b * a[2], b * a[3], b * a[4])
+	else
+		return colors.new(a[1] * b[1], a[2] * b[2], a[3] * b[3], a[4] * b[4])
+	end
+end
+
+---@param a Colors
+---@param b Colors
+---@return Colors
+function colors.__div(a, b)
+	if type(b) == "number" then
+		return colors.new(a[1] / b, a[2] / b, a[3] / b, a[4] / b)
+	else
+		return colors.new(a[1] / b[1], a[2] / b[2], a[3] / b[3], a[4] / b[4])
+	end
+end
+
+---@param a Colors
+---@param b Colors
+---@return boolean
+function colors.__eq(a, b)
+	for i = 1, 4 do
+		if a[i] ~= b[i] then
+			return false
+		end
+	end
+	return a.color and b.color
+end
 
 -- colors in order from wikipedia web colors
 colors.white = colors.new(1, 1, 1)
