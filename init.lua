@@ -15,7 +15,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.1.3"
+colors._VERSION = "1.1.4"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -39,7 +39,7 @@ end
 
 local function linearAverage(list)
 	local t = 0
-	for i,v in ipairs(list) do
+	for _, v in ipairs(list) do
 		t = t + v
 	end
 	return t / #list
@@ -78,20 +78,13 @@ function colors.new(r, g, b, a)
 		self[4] = r[4] or colors.range
 	end
 	assert(self[1], "Improper color passed.")
-	self.color = true
 	return self
 end
 
 ---@param a Colors
 ---@return boolean
 function colors.isValid(a)
-	if type(a) ~= "table" then return false end
-	for i = 1, 4 do
-		if type(a[i]) ~= "number" then
-			return false
-		end
-	end
-	return a.color == true -- ensure boolean return, not nil
+	return getmetatable(a) == colors
 end
 
 ---@param intensity number float 0-1 of how much to desaturate
@@ -375,7 +368,7 @@ function colors.__eq(a, b)
 			return false
 		end
 	end
-	return a.color and b.color
+	return colors.isValid(a) and colors.isValid(b)
 end
 
 -- colors in order from wikipedia web colors
