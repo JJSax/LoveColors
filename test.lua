@@ -1,5 +1,7 @@
-
-local colors = require "init" -- must be loaded from same folder.
+package.path = "../?.lua;" .. package.path
+local Colors = require "init" -- must be loaded from same folder.
+local colors = Colors.rgba
+local hsla = Colors.hsla
 local epsilon = 4.57e-15
 
 local totalTests = 0
@@ -262,8 +264,8 @@ test("colorToHSL", function()
 )
 
 test("hsl", function()
-		local c = colors.hsl.new(0.5, 1, 1, 1)
-		return same(c.h, 0.5) and c.s == 1 and c.l == 1 and c.a == 1 and getmetatable(c) == colors.hsl
+		local c = hsla.new(0.5, 1, 1, 1)
+		return same(c.h, 0.5) and c.s == 1 and c.l == 1 and c.a == 1 and getmetatable(c) == hsla
 	end,
 	true
 )
