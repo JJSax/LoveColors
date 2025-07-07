@@ -81,6 +81,15 @@ test("rgbIndexing", function()
 	true
 )
 
+-- Need to see if I can prevent direct alterations to predefined colors
+-- test("alteration", function()
+-- 		local c = colors.red
+-- 		c.r = 0
+-- 		return colors.red.r == 1 and c.g == 0 and c.b == 0 and c.a == 1
+-- 	end,
+-- 	true
+-- )
+
 test("valid color", function ()
 		local c = colors.red
 		return c:isValid()
@@ -212,18 +221,11 @@ test("fast average", function()
 	true
 )
 
-test("hsl average", function()
-		local r, g, b, a = colors.red:averageHue(colors.blue):unpack()
-		return same(r, 1) and same(g, 0) and same(b, 1) and same(a, 1)
-	end,
-	true
-)
-
 test("clone", function()
 		local c = colors.new(0.1, 0.2, 0.3, 0.4)
 		local b = c:clone()
 		return c[1] == b[1] and c[2] == b[2] and c[3] == b[3] and c[4] == b[4]
-		 and colors.isValid(c) and colors.isValid(b)
+		and colors.isValid(c) and colors.isValid(b)
 	end,
 	true
 )
@@ -233,6 +235,43 @@ test("random", function()
 		return (colors.random() ~= colors.random())
 			or (colors.random() ~= colors.random())
 			or (colors.random() ~= colors.random())
+	end,
+	true
+)
+
+test("hsl average", function()
+		local r, g, b, a = colors.red:averageHue(colors.blue):unpack()
+		return same(r, 1) and same(g, 0) and same(b, 1) and same(a, 1)
+	end,
+	true
+)
+
+test("hsl average 2", function()
+		local r, g, b, a = colors.averageHue(colors.red, colors.blue):unpack()
+		return same(r, 1) and same(g, 0) and same(b, 1) and same(a, 1)
+	end,
+	true
+)
+
+test("colorToHSL", function()
+		local hc = colors.red:toHsl()
+		local h, s, l, a = hc:unpack()
+		return same(h, 0) and same(s, 1) and same(l, 0.5) and same(a, 1)
+	end,
+	true
+)
+
+test("hsl", function()
+		local c = colors.hsl.new(0.5, 1, 1, 1)
+		return same(c.h, 0.5) and c.s == 1 and c.l == 1 and c.a == 1 and getmetatable(c) == colors.hsl
+	end,
+	true
+)
+
+test("HSLToRGB", function()
+		local c = colors.red:toHsl():toRgb()
+		local r, g, b, a = c:unpack()
+		return same(r, 1) and same(g, 0) and same(b, 0) and same(a, 1)
 	end,
 	true
 )

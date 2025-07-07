@@ -1,12 +1,12 @@
 local iMap = { r = 1, g = 2, b = 3, a = 4 }
-local unpack = table.unpack or unpack
+local hslIMap = { h = 1, s = 2, l = 3, a = 4 }
+local unpack = table.unpack or unpack -- Adjust for lua unpack changes
 
 ---@class Colors
 ---@field r number
 ---@field g number
 ---@field b number
 ---@field a number
----@field color boolean
 local colors = {}
 colors.__index = function(t, key)
 	return iMap[key] and t[iMap[key]] or colors[key]
@@ -15,7 +15,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "1.1.4"
+colors._VERSION = "2.0.0"
 colors.range = 1
 
 local function clamp(x, min, max)
@@ -25,7 +25,7 @@ local function clamp(x, min, max)
 end
 
 local function lerp(a, b, f)
-	return a * (1 - f) + (b * f)
+	return a + (b - a) * f
 end
 
 local function testNumber(...)
@@ -163,32 +163,6 @@ function colors.average(...)
 	return colors.new(c[1] / t, c[2] / t, c[3] / t, c[4] / t)
 end
 
----Takes a list of RGB colors and averages hues to be more accurate to human perception.<br>
----Slower than just taking the simple colors.average.
----@param ... Colors
----@return Colors
-function colors.averageHue(...)
-	local colorsList = { ... }
-	local hList, sList, lList, aList = {}, {}, {}, {}
-
-	for _, c in ipairs(colorsList) do
-		local r, g, b, a = c[1], c[2], c[3], c[4]
-		local h, s, l = unpack(colors.rgbToHsl(r, g, b))
-		table.insert(hList, h)
-		table.insert(sList, s)
-		table.insert(lList, l)
-		table.insert(aList, a)
-	end
-
-	local avgH = averageHue(hList)
-	local avgS = linearAverage(sList)
-	local avgL = linearAverage(lList)
-	local avgA = linearAverage(aList)
-
-	local output = colors.hslToRgb(avgH, avgS, avgL)
-	return output:alpha(avgA)
-end
-
 ---@param alpha? number alpha to get color.
 ---@return Colors
 function colors.random(alpha)
@@ -202,7 +176,7 @@ function colors.clone(a)
 	return colors.new(a:unpack())
 end
 
-
+--!Note HSL and HSV are in beta and will be subject to changes
 --[[
 	HSL and HSV reference
 	https://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
@@ -210,21 +184,85 @@ end
 	adapted from http://en.wikipedia.org/wiki/HSV_color_space
 ]]
 
+---@class HSLAColor
+---@field h number
+---@field s number
+---@field l number
+---@field a number
+local hsl = {}
+hsl.__index = function(t, key)
+	return hslIMap[key] and t[hslIMap[key]] or hsl[key]
+end
+hsl.__newindex = function(t, key, value)
+	rawset(t, hslIMap[key] or key, value)
+end
+
+function hsl.new(h, s, l, a)
+	local self = setmetatable({}, hsl)
+	if h and s and l then
+		testNumber(h, s, l)
+		self[1] = h
+		self[2] = s
+		self[3] = l
+		self[4] = a or 1
+	elseif type(h) == "table" then
+		testNumber(h[1], h[2], h[3])
+		self[1] = h[1]
+		self[2] = h[2]
+		self[3] = h[3]
+		self[4] = h[4] or 1
+	end
+	assert(self[1], "Improper color passed.")
+	return self
+end
+
+---Takes a list of RGB colors and averages hues to be more accurate to human perception.<br>
+---Slower than just taking the simple colors.average.
+---@param ... Colors
+---@return Colors
+function colors.averageHue(...)
+	local colorsList = { ... }
+	local hList, sList, lList, aList = {}, {}, {}, {}
+
+	for _, c in ipairs(colorsList) do
+		local r, g, b, a = c[1], c[2], c[3], c[4]
+		local h, s, l = unpack(colors.toHsl(r, g, b))
+		table.insert(hList, h)
+		table.insert(sList, s)
+		table.insert(lList, l)
+		table.insert(aList, a)
+	end
+
+	local avgH = averageHue(hList)
+	local avgS = linearAverage(sList)
+	local avgL = linearAverage(lList)
+	local avgA = linearAverage(aList)
+
+	local output = hsl.toRgb(avgH, avgS, avgL)
+	return output:alpha(avgA)
+end
+
 ---Converts an RGB color value to HSL. Conversion formula
 ---assumes r, g, and b are between 0 and colors.range
 ---returns h, s, and l in range between 0 and 1f
----@param r number The red color value
----@param g number The green color value
----@param b number The blue color value
----@return table #The HSL representation
-function colors.rgbToHsl(r, g, b)
-	r, g, b = r / colors.range, g / colors.range, b / colors.range
+---@param r number|Colors The red color value
+---@param g number? The green color value
+---@param b number? The blue color value
+---@param a number? The alpha color value
+---@return HSLAColor #The HSL representation
+function colors.toHsl(r, g, b, a)
+	if getmetatable(r) == colors then
+		r, g, b, a = colors.unpack(r --[[@as Colors]])
+	else
+		r, g, b, a = r / colors.range, g / colors.range, b / colors.range, (a or 1) / colors.range
+	end
+
 	local max, min = math.max(r, g, b), math.min(r, g, b)
 	local h = (max + min) / 2
 	local s, l = h, h
 
 	if (max == min) then
-		return { 0, 0, l } -- achromatic
+		return hsl.new( 0, 0, l, a ) -- achromatic
 	end
 
 	local d = max - min
@@ -233,11 +271,50 @@ function colors.rgbToHsl(r, g, b)
 	if max == g then h = (b - r) / d + 2 end
 	if max == b then h = (r - g) / d + 4 end
 
-	return { h / 6, s, l }
+	return hsl.new(h / 6, s, l, a)
 end
 
-function colors:hsl()
-	return colors.rgbToHsl(self.r, self.g, self.b)
+-- Interpolate between two hues
+function hsl.lerpHue(h1, h2, t)
+	local delta = (h2 - h1) % 1
+	if delta > 0.5 then
+		delta = delta - 1
+	end
+	return (h1 + delta * t) % 1
+end
+
+-- Interpolate between two HSL colors
+function hsl.lerpHSL(hsl1, hsl2, t)
+	return hsl.new{
+		hsl.lerpHue(hsl1.h, hsl2.h, t),
+		lerp(hsl1.s, hsl2.s, t),
+		lerp(hsl1.l, hsl2.l, t),
+		lerp(hsl1.a, hsl2.a, t)
+	}
+end
+
+-- Given a float index and array of Colors, interpolate using HSL
+function colors.interpolate(colorArray, index)
+	assert(#colorArray > 0, "colorArray must not be empty")
+
+	if index <= 0 then
+		return colorArray[1]
+	elseif index >= #colorArray then
+		return colorArray[#colorArray]
+	end
+
+	local scaled = index * (#colorArray - 1) / #colorArray
+	local i0 = math.floor(scaled)
+	local frac = scaled - i0
+
+	local colorA = colorArray[i0 + 1]
+	local colorB = colorArray[i0 + 2]
+
+	local hslA = colors.toHsl(colorA)
+	local hslB = colors.toHsl(colorB)
+
+	local hslResult = hsl.lerpHSL(hslA, hslB, frac)
+	return hsl.toRgb(hslResult)
 end
 
 local function hue2rgb(p, q, t)
@@ -249,15 +326,21 @@ local function hue2rgb(p, q, t)
 	return p
 end
 
+---@deprecated The arguments will be changing.  Use hslColorObject:toRgb() or hsl.toRgb(hslColorObject) instead.
 ---Converts an HSL color value to RGB. Conversion formula
 ---assumes h, s, and l are between 0 and 1
----@param h number Hue
----@param s number Saturation
----@param l number Lightness
+---@param h number|HSLAColor Hue
+---@param s number? Saturation
+---@param l number? Lightness
 ---@return Colors #The RGB representation
-function colors.hslToRgb(h, s, l)
+function hsl.toRgb(h, s, l, a)
+	if getmetatable(h) == hsl then --todo move entirely to hsl objects; which will make diagnostic disable below un-needed
+		---@diagnostic disable-next-line: undefined-field
+		h, s, l, a = h.h, h.s, h.l, h.a
+	end
+
 	if s == 0 then
-		return colors.new(l * colors.range, l * colors.range, l * colors.range)
+		return colors.new(l * colors.range, l * colors.range, l * colors.range, a)
 	end
 
 	local q = l < 0.5 and l * (1 + s) or l + s - l * s
@@ -265,8 +348,14 @@ function colors.hslToRgb(h, s, l)
 	local r = hue2rgb(p, q, h + 1/3)
 	local g = hue2rgb(p, q, h)
 	local b = hue2rgb(p, q, h - 1/3)
-	return colors.new(r * colors.range, g * colors.range, b * colors.range)
+	return colors.new(r * colors.range, g * colors.range, b * colors.range, a)
 end
+
+function hsl:unpack()
+	return self.h, self.s, self.l, self.a
+end
+
+
 
 ---Converts an RGB color value to HSV. Conversion formula
 ---Assumes r, g, and b are between 0 and colors.range
@@ -435,6 +524,12 @@ if love and love.graphics then
 		return colors.new(lg.getBackgroundColor())
 	end
 
+	function hsl:set()
+		lg.setColor(self:toRgb())
+	end
+
 end
+
+colors.hsl = hsl
 
 return colors
