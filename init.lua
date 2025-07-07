@@ -1,14 +1,14 @@
 
 local unpack = table.unpack or unpack -- Adjust for lua unpack changes
 
-local HERE = (...):match("(.-)[^%.]+$")
+local HERE = ... == "init" and "" or ...
 local Collection = {
-	colors = require(HERE .. "LoveColors.rgba"),
-	hsla = require(HERE .. "LoveColors.hsla"),
-	hsva = require(HERE .. "LoveColors.hsva"),
+	colors = require(HERE .. ".rgba"),
+	hsla = require(HERE .. ".hsla"),
+	hsva = require(HERE .. ".hsva"),
 }
 Collection.rgba = Collection.colors
-Collection._VERSION = "2.0.1"
+Collection._VERSION = "2.0.2"
 
 
 -------------------------------------
