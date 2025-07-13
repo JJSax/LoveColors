@@ -3,6 +3,7 @@ local common = require(HERE .. ".common")
 local testNumber = common.testNumber
 local lerp = common.lerp
 local clamp = common.clamp
+local unpack = table.unpack or unpack -- Adjust for lua unpack changes
 
 local iMap = { r = 1, g = 2, b = 3, a = 4 }
 
@@ -19,8 +20,15 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "2.0.1"
+colors._VERSION = "2.0.2"
 colors.range = 1
+
+local hsla
+function colors.init(HSLA)
+	hsla = HSLA
+
+	colors.init = nil
+end
 
 ---@param r number|table{ number, number, number, number? } Red value or {r,g,b[,a]}
 ---@param g? number Green value
@@ -50,6 +58,29 @@ end
 ---@return boolean
 function colors.isValid(a)
 	return getmetatable(a) == colors
+end
+
+---Converts an RGB color value to HSL. Conversion formula
+---assumes r, g, and b are between 0 and colors.range
+---returns h, s, and l in range between 0 and 1f
+---@return HSLAColor #The HSL representation
+function colors:toHsl()
+	local r, g, b, a = self:unpack()
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h = (max + min) / 2
+	local s, l = h, h
+
+	if (max == min) then
+		return hsla.new(0, 0, l, a) -- achromatic
+	end
+
+	local d = max - min
+	s = l > 0.5 and d / (2 - max - min) or d / (max + min)
+	if max == r then h = (g - b) / d + (g < b and 6 or 0) end
+	if max == g then h = (b - r) / d + 2 end
+	if max == b then h = (r - g) / d + 4 end
+
+	return hsla.new((h / 6) * common.TAU, s, l, a)
 end
 
 ---@param intensity number float 0-1 of how much to desaturate
@@ -141,6 +172,74 @@ function colors.clone(a)
 	return colors.new(a:unpack())
 end
 
+local function linearAverage(list)
+	local t = 0
+	for _, v in ipairs(list) do
+		t = t + v
+	end
+	return t / #list
+end
+
+local function averageHue(hues)
+	local x, y = 0, 0
+	for _, h in ipairs(hues) do
+		x = x + math.cos(h)
+		y = y + math.sin(h)
+	end
+	local avg_angle = math.atan2(y, x)
+	if avg_angle < 0 then avg_angle = avg_angle + 2 * math.pi end
+	return avg_angle
+end
+
+
+---Takes a list of RGB colors and averages hues to be more accurate to human perception.<br>
+---Slower than just taking the simple colors.average.
+---@param ... Colors
+---@return Colors
+function colors.averageHue(...)
+	local colorsList = { ... }
+	local hList, sList, lList, aList = {}, {}, {}, {}
+
+	for _, c in ipairs(colorsList) do
+		---@diagnostic disable-next-line: undefined-field LLS Please!
+		local h, s, l = unpack(c:toHsl())
+		table.insert(hList, h)
+		table.insert(sList, s)
+		table.insert(lList, l)
+		table.insert(aList, c[4])
+	end
+
+	local avgH = averageHue(hList)
+	local avgS = linearAverage(sList)
+	local avgL = linearAverage(lList)
+	local avgA = linearAverage(aList)
+	return hsla.new(avgH, avgS, avgL, avgA):toRgb()
+end
+
+-- Given a float index and array of Colors, interpolate using HSL
+function colors.interpolate(colorArray, index)
+	assert(#colorArray > 0, "colorArray must not be empty")
+
+	if index <= 0 then
+		return colorArray[1]
+	elseif index >= #colorArray then
+		return colorArray[#colorArray]
+	end
+
+	local scaled = index * (#colorArray - 1) / #colorArray
+	local i0 = math.floor(scaled)
+	local frac = scaled - i0
+
+	local colorA = colorArray[i0 + 1]
+	local colorB = colorArray[i0 + 2]
+
+	local hslA = colorA:toHsl()
+	local hslB = colorB:toHsl()
+
+	local hslResult = hsla.lerpHSL(hslA, hslB, frac)
+	return hslResult:toRgb()
+end
+
 ---@param a Colors
 ---@param b Colors
 ---@return Colors
@@ -189,6 +288,27 @@ function colors.__eq(a, b)
 		end
 	end
 	return colors.isValid(a) and colors.isValid(b)
+end
+
+if love and love.graphics then
+	local lg = love.graphics
+
+	-- Only if using love and the graphics is enabled
+	function colors:set()
+		lg.setColor(self)
+	end
+
+	function colors:setBackgroundColor()
+		lg.setBackgroundColor(self)
+	end
+
+	function colors:getColor()
+		return colors.new(lg.getColor())
+	end
+
+	function colors:getBackgroundColor()
+		return colors.new(lg.getBackgroundColor())
+	end
 end
 
 -- colors in order from wikipedia web colors

@@ -25,6 +25,14 @@ hsla.__newindex = function(t, key, value)
 	rawset(t, hslIMap[key] or key, value)
 end
 
+hsla._VERSION = "0.9.0"
+
+local rgba
+function hsla.init(RGBA)
+	rgba = RGBA
+	hsla.init = nil
+end
+
 function hsla.new(h, s, l, a)
 	local self = setmetatable({}, hsla)
 	if h and s and l then
@@ -90,7 +98,40 @@ function hsla.interpolate(hslArray, index)
 	return hsla.lerpHSL(colorA, colorB, frac)
 end
 
+local function hue2rgb(p, q, t)
+	if t < 0 then t = t + 1 end
+	if t > 1 then t = t - 1 end
+	if t < 1 / 6 then return p + (q - p) * 6 * t end
+	if t < 1 / 2 then return q end
+	if t < 2 / 3 then return p + (q - p) * (2 / 3 - t) * 6 end
+	return p
+end
+
+---Converts an HSL color value to RGB. Conversion formula
+---assumes h, s, and l are between 0 and 1
+---@return Colors #The RGB representation
+function hsla:toRgb()
+	if self.s == 0 then
+		return rgba.new(self.l * rgba.range, self.l * rgba.range, self.l * rgba.range, self.a)
+	end
+
+	local h = (self.h % common.TAU) / common.TAU
+	local q = self.l < 0.5 and self.l * (1 + self.s) or self.l + self.s - self.l * self.s
+	local p = 2 * self.l - q
+	local r = hue2rgb(p, q, h + 1 / 3)
+	local g = hue2rgb(p, q, h)
+	local b = hue2rgb(p, q, h - 1 / 3)
+	return rgba.new(r * rgba.range, g * rgba.range, b * rgba.range, self.a)
+end
+
 function hsla.radiansToUnit(h) return (h % common.TAU) / common.TAU end
 function hsla.unitToRadians(u) return (u % 1) * common.TAU end
+
+
+if love and love.graphics then
+	function hsla:set()
+		love.graphics.setColor(self:toRgb())
+	end
+end
 
 return hsla

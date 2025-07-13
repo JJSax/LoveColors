@@ -237,6 +237,15 @@ test("clone", function()
 	true
 )
 
+test("newClone", function()
+		local c = colors.new(0.1, 0.2, 0.3, 0.4)
+		local b = colors.new(c)
+		return c[1] == b[1] and c[2] == b[2] and c[3] == b[3] and c[4] == b[4]
+			and colors.isValid(c) and colors.isValid(b)
+	end,
+	true
+)
+
 test("random", function()
 		-- three to make chances even lower that two would be the same.
 		return (colors.random() ~= colors.random())
