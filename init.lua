@@ -2,6 +2,7 @@
 local unpack = table.unpack or unpack -- Adjust for lua unpack changes
 
 local HERE = ... == "init" and "" or ...
+local common = require(HERE .. ".common")
 local Collection = {
 	colors = require(HERE .. ".rgba"),
 	hsla = require(HERE .. ".hsla"),
@@ -30,13 +31,12 @@ end
 local function averageHue(hues)
 	local x, y = 0, 0
 	for _, h in ipairs(hues) do
-		local angle = h * 2 * math.pi
-		x = x + math.cos(angle)
-		y = y + math.sin(angle)
+		x = x + math.cos(h)
+		y = y + math.sin(h)
 	end
 	local avg_angle = math.atan2(y, x)
 	if avg_angle < 0 then avg_angle = avg_angle + 2 * math.pi end
-	return avg_angle / (2 * math.pi)
+	return avg_angle
 end
 
 ---Converts an RGB color value to HSL. Conversion formula
@@ -59,7 +59,7 @@ function rgba:toHsl()
 	if max == g then h = (b - r) / d + 2 end
 	if max == b then h = (r - g) / d + 4 end
 
-	return hsla.new(h / 6, s, l, a)
+	return hsla.new((h / 6) * common.TAU, s, l, a)
 end
 
 ---Takes a list of RGB colors and averages hues to be more accurate to human perception.<br>
@@ -127,11 +127,12 @@ function hsla:toRgb()
 		return rgba.new(self.l * rgba.range, self.l * rgba.range, self.l * rgba.range, self.a)
 	end
 
+	local h = (self.h % common.TAU) / common.TAU
 	local q = self.l < 0.5 and self.l * (1 + self.s) or self.l + self.s - self.l * self.s
 	local p = 2 * self.l - q
-	local r = hue2rgb(p, q, self.h + 1/3)
-	local g = hue2rgb(p, q, self.h)
-	local b = hue2rgb(p, q, self.h - 1/3)
+	local r = hue2rgb(p, q, h + 1 / 3)
+	local g = hue2rgb(p, q, h)
+	local b = hue2rgb(p, q, h - 1 / 3)
 	return rgba.new(r * rgba.range, g * rgba.range, b * rgba.range, self.a)
 end
 

@@ -39,6 +39,11 @@ local function same(a, b)
 	return math.abs(a - b) < epsilon
 end
 
+local function moe(a, b)
+	local diff = 1/254 -- 255 for more flexibility
+	return math.abs(a - b) < diff
+end
+
 test("new1", function()
 		local c = colors.red
 		return c[1] == 1 and c[2] == 0 and c[3] == 0 and c[4] == 1
@@ -237,6 +242,58 @@ test("random", function()
 		return (colors.random() ~= colors.random())
 			or (colors.random() ~= colors.random())
 			or (colors.random() ~= colors.random())
+	end,
+	true
+)
+
+test("hsl angle", function()
+		local r,g,b,a = hsla.new(0, 1, 0.5, 1):toRgb():unpack()
+		return same(r, 1) and same(g, 0) and same(b, 0) and same(a, 1)
+	end,
+	true
+)
+
+test("hsl verify colors", function()
+		-- verifying color conversion; colors collected from colorpicker.dev
+		local function rgb(r,g,b)
+			return colors.new(r/255, g/255, b / 255)
+		end
+
+		local function hsl(h,s,l)
+			return hsla.new(h/360*math.pi*2, s / 100, l / 100)
+		end
+
+		local conversions = {
+			{hsl(0, 58.6, 45.5), rgb(184, 48, 48)},
+			{hsl(106, 31, 77.5), rgb(188, 215, 180)},
+			{hsl(243, 46.9, 43.7), rgb(64, 59, 164)},
+			{hsl(314, 100, 77.5), rgb(255, 140, 228)},
+			{hsl(193, 71.8, 55.2), rgb(59, 187, 223)},
+			{hsl(95, 71.8, 55.2), rgb(127, 223, 59)},
+			{hsl(292, 100, 55.2), rgb(225, 27, 255)},
+			{hsl(61, 100, 55.2), rgb(251, 255, 27)},
+			{hsl(161, 100, 55.2), rgb(27, 255, 183)},
+			{hsl(212, 100, 20.7), rgb(0, 49, 106)},
+			{hsl(316, 28.4, 20.7), rgb(68, 38, 60)},
+			{hsl(123, 28.4, 20.7), rgb(38, 68, 39)},
+			{hsl(237, 58.5, 42.3), rgb(45, 51, 171)},
+			{hsl(96, 71.6, 37.8), rgb(83, 165, 27)},
+			{hsl(360, 71.6, 37.8), rgb(165, 27, 27)}
+		}
+
+		local success = true
+		for i, v in ipairs(conversions) do
+			local r, g, b, a = v[1]:toRgb():unpack()
+			local rgb = v[2]
+			if not (moe(r, rgb.r) and moe(g, rgb.g) and moe(b, rgb.b)) then
+				local s = string.format("Wrong color %d: %.10f %.10f %.10f %.10f -> %.10f %.10f %.10f %.10f", i,r,g,b,a, rgb:unpack())
+				print(s)
+				success = false
+			end
+		end
+
+		return success
+
 	end,
 	true
 )

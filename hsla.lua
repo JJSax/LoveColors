@@ -16,17 +16,17 @@ local lerp = common.lerp
 ---@field s number
 ---@field l number
 ---@field a number
-local hsl = {}
+local hsla = {}
 local hslIMap = { h = 1, s = 2, l = 3, a = 4 }
-hsl.__index = function(t, key)
-	return hslIMap[key] and t[hslIMap[key]] or hsl[key]
+hsla.__index = function(t, key)
+	return hslIMap[key] and t[hslIMap[key]] or hsla[key]
 end
-hsl.__newindex = function(t, key, value)
+hsla.__newindex = function(t, key, value)
 	rawset(t, hslIMap[key] or key, value)
 end
 
-function hsl.new(h, s, l, a)
-	local self = setmetatable({}, hsl)
+function hsla.new(h, s, l, a)
+	local self = setmetatable({}, hsla)
 	if h and s and l then
 		testNumber(h, s, l)
 		self[1] = h
@@ -45,26 +45,52 @@ function hsl.new(h, s, l, a)
 end
 
 -- Interpolate between two hues
-function hsl.lerpHue(h1, h2, t)
-	local delta = (h2 - h1) % 1
-	if delta > 0.5 then
-		delta = delta - 1
+function hsla.lerpHue(h1, h2, t)
+	local delta = (h2 - h1) % common.TAU
+	if delta > math.pi then
+		delta = delta - common.TAU
 	end
-	return (h1 + delta * t) % 1
+	return (h1 + delta * t) % common.TAU
 end
 
 -- Interpolate between two HSL colors
-function hsl.lerpHSL(hsl1, hsl2, t)
-	return hsl.new {
-		hsl.lerpHue(hsl1.h, hsl2.h, t),
+function hsla.lerpHSL(hsl1, hsl2, t)
+	return hsla.new {
+		hsla.lerpHue(hsl1.h, hsl2.h, t),
 		lerp(hsl1.s, hsl2.s, t),
 		lerp(hsl1.l, hsl2.l, t),
 		lerp(hsl1.a, hsl2.a, t)
 	}
 end
 
-function hsl:unpack()
+function hsla:unpack()
 	return self.h, self.s, self.l, self.a
 end
 
-return hsl
+function hsla.interpolate(hslArray, index)
+	assert(#hslArray > 0, "hslArray must not be empty")
+
+	if index <= 0 then
+		return hslArray[1]
+	elseif index >= #hslArray then
+		return hslArray[#hslArray]
+	end
+
+	local scaled = index * (#hslArray - 1) / #hslArray
+	local i0 = math.floor(scaled)
+	local frac = scaled - i0
+
+	local colorA = hslArray[i0 + 1]
+	local colorB = hslArray[i0 + 2]
+
+	if not colorB then
+		return colorA -- if index is at the end
+	end
+
+	return hsla.lerpHSL(colorA, colorB, frac)
+end
+
+function hsla.radiansToUnit(h) return (h % common.TAU) / common.TAU end
+function hsla.unitToRadians(u) return (u % 1) * common.TAU end
+
+return hsla

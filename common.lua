@@ -1,5 +1,6 @@
 
 local common = {}
+common.TAU = math.pi * 2
 
 function common.clamp(x, min, max)
 	if x > max then return max end
