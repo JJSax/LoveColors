@@ -74,6 +74,48 @@ test("new5", function()
 	end,
 	true
 )
+test("new from string hex 1", function()
+		local c = colors.new("ffffffff")
+		return c[1] == 1 and c[2] == 1 and c[3] == 1 and c[4] == 1
+	end,
+	true
+)
+test("new from string hex 2", function()
+		local c = colors.new("00ffffff")
+		return c[1] == 1 and c[2] == 1 and c[3] == 1 and c[4] == 0
+	end,
+	true
+)
+test("new from string hex 3", function()
+		local c = colors.new("ff99AAB5")
+		return same(c[1], 0.6) and same(c[2], 0.6666666666666666) and same(c[3], 0.7098039215686275) and same(c[4], 1)
+	end,
+	true
+)
+test("new from string hex 4", function()
+		local c = colors.new("ff36A0B5")
+		return same(c[1], 0.21176470588235294) and same(c[2], 0.6274509803921569) and same(c[3], 0.7098039215686275) and same(c[4], 1)
+	end,
+	true
+)
+test("new from string hex 5", function()
+		local c = colors.new("36A0B5")
+		return same(c[1], 0.21176470588235294) and same(c[2], 0.6274509803921569) and same(c[3], 0.7098039215686275)
+	end,
+	true
+)
+test("hex is color 1", function()
+		local c = colors.new("ff36A0B5")
+		return colors.isValid(c)
+	end,
+	true
+)
+test("hex is color 1", function()
+		local c = colors.new("ff36A0B5")
+		return c:isValid()
+	end,
+	true
+)
 test("rgbIndexing", function()
 		local c = colors.red
 		return c.r == 1 and c.g == 0 and c.b == 0 and c.a == 1

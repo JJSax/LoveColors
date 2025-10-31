@@ -20,7 +20,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "2.0.2"
+colors._VERSION = "2.1.0"
 colors.range = 1
 
 local hsla
@@ -30,7 +30,7 @@ function colors.init(HSLA)
 	colors.init = nil
 end
 
----@param r number|table{ number, number, number, number? } Red value or {r,g,b[,a]}
+---@param r number|table|string{ number, number, number, number? } Red value or {r,g,b[,a]}
 ---@param g? number Green value
 ---@param b? number Blue value
 ---@param a? number Alpha value
@@ -49,6 +49,17 @@ function colors.new(r, g, b, a)
 		self[2] = r[2]
 		self[3] = r[3]
 		self[4] = r[4] or colors.range
+	elseif type(r) == "string" then --! WIP subject to change
+		--* Some hex values put alpha at end.  For now I'm using VSCode's format for my own ease but it is possible there is a better way.
+		--* Please open an issue if you know better methods
+		-- hex value format "aarrggbb"; VSCode's format
+		assert(r:len() == 6 or r:len() == 8, "Invalid HEX code.  Required Format is [aa]rrggbb")
+
+		if r:len() == 6 then r = "ff" .. r end
+		self[4] = tonumber(r:sub(1, 2), 16) / 255 -- VSCode puts alpha at the start
+		self[1] = tonumber(r:sub(3, 4), 16) / 255
+		self[2] = tonumber(r:sub(5, 6), 16) / 255
+		self[3] = tonumber(r:sub(7, 8), 16) / 255
 	end
 	assert(self[1], "Improper color passed.")
 	return self
