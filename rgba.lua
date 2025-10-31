@@ -350,6 +350,7 @@ colors.magenta = colors.new(1, 0, 1)
 colors.lightGray = colors.new(0.827451, 0.827451, 0.827451)
 colors.darkGray = colors.new(0.25, 0.25, 0.25)
 colors.gold = colors.new(1, 0.84, 0)
+colors.goldenrod = colors.new(0.855, 0.647, 0.125)
 colors.lightRed = colors.new(1, 0.5, 0.5)
 colors.pink = colors.lightRed
 colors.lightGreen = colors.new(0.5, 1, 0.5)
@@ -364,5 +365,6 @@ colors.darkYellow = colors.new(0.5, 0.25, 0)
 colors.brown = colors.new(0.5, 0.25, 0)
 colors.darkSlateGray = colors.new(0.184314, 0.309804, 0.309804)
 colors.slateGray = colors.new(0.439216, 0.513725, 0.513725)
+
 
 return colors
