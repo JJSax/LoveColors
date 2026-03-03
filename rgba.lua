@@ -20,7 +20,7 @@ colors.__newindex = function(t, key, value)
 	rawset(t, iMap[key] or key, value)
 end
 
-colors._VERSION = "2.1.0"
+colors._VERSION = "2.1.1"
 colors.range = 1
 
 local hsla
@@ -365,6 +365,6 @@ colors.darkYellow = colors.new(0.5, 0.25, 0)
 colors.brown = colors.new(0.5, 0.25, 0)
 colors.darkSlateGray = colors.new(0.184314, 0.309804, 0.309804)
 colors.slateGray = colors.new(0.439216, 0.513725, 0.513725)
-
+colors.invisible = colors.new(0, 0, 0, 0)
 
 return colors
